@@ -6,6 +6,7 @@ import type { TracksyDB, Account } from '@/lib/db';
 interface Props {
     db: TracksyDB;
     showToast: (msg: string, type?: 'success' | 'error') => void;
+    openAddSignal?: number;
 }
 
 const fmt = (n: number) =>
@@ -17,7 +18,7 @@ const ICONS: Record<string, string> = {
     checking: '🏦', savings: '🐷', credit: '💳', cash: '💵',
 };
 
-export default function Accounts({ db, showToast }: Props) {
+export default function Accounts({ db, showToast, openAddSignal }: Props) {
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState<Account | null>(null);
@@ -31,11 +32,17 @@ export default function Accounts({ db, showToast }: Props) {
 
     useEffect(() => { load(); }, [load]);
 
-    const openAdd = () => {
+    const openAdd = useCallback(() => {
         setEditing(null);
         setForm(blank);
         setShowModal(true);
-    };
+    }, [blank]);
+
+    useEffect(() => {
+        if (openAddSignal && openAddSignal > 0) {
+            openAdd();
+        }
+    }, [openAddSignal, openAdd]);
 
     const openEdit = (acc: Account) => {
         setEditing(acc);
@@ -79,8 +86,11 @@ export default function Accounts({ db, showToast }: Props) {
                     <div className="topbar-title">Accounts</div>
                     <div className="topbar-subtitle">{accounts.length} account{accounts.length !== 1 ? 's' : ''}</div>
                 </div>
-                <div className="topbar-actions">
-                    <button className="btn btn-primary" onClick={openAdd}>+ Add Account</button>
+                <div className="topbar-actions mobile-action-visible">
+                    <button className="btn btn-primary btn-sm" onClick={openAdd}>
+                        <span className="hide-mobile">+ Add Account</span>
+                        <span className="show-mobile">+ Account</span>
+                    </button>
                 </div>
             </div>
 

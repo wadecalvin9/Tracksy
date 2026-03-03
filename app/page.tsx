@@ -19,8 +19,10 @@ export default function Home() {
   const [page, setPage] = useState<Page>('dashboard');
   const [ready, setReady] = useState(false);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
-  // Signals to Transactions to open its add modal
+  // Signals to components to open their add modals
   const [openAddTx, setOpenAddTx] = useState(0);
+  const [openAddBudget, setOpenAddBudget] = useState(0);
+  const [openAddAccount, setOpenAddAccount] = useState(0);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     const id = Date.now();
@@ -44,8 +46,14 @@ export default function Home() {
   }
 
   const handleFab = () => {
-    setPage('transactions');
-    setOpenAddTx(n => n + 1);   // increment triggers useEffect in Transactions
+    if (page === 'budgets') {
+      setOpenAddBudget(n => n + 1);
+    } else if (page === 'accounts') {
+      setOpenAddAccount(n => n + 1);
+    } else {
+      setPage('transactions');
+      setOpenAddTx(n => n + 1);
+    }
   };
 
   const pageProps = { db, showToast };
@@ -57,8 +65,8 @@ export default function Home() {
       <div className="main-content">
         {page === 'dashboard' && <Dashboard    {...pageProps} onNavigate={setPage} />}
         {page === 'transactions' && <Transactions {...pageProps} openAddSignal={openAddTx} />}
-        {page === 'budgets' && <Budgets      {...pageProps} />}
-        {page === 'accounts' && <Accounts     {...pageProps} />}
+        {page === 'budgets' && <Budgets      {...pageProps} openAddSignal={openAddBudget} />}
+        {page === 'accounts' && <Accounts     {...pageProps} openAddSignal={openAddAccount} />}
         {page === 'reports' && <Reports      {...pageProps} />}
       </div>
 

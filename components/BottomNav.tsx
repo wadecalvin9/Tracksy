@@ -5,8 +5,9 @@ import type { Page } from '@/app/page';
 const TABS = [
     { id: 'dashboard', icon: '⊞', label: 'Home' },
     { id: 'transactions', icon: '↕', label: 'Txns' },
-    // FAB is center
     { id: 'budgets', icon: '◎', label: 'Budget' },
+    // FAB is center
+    { id: 'accounts', icon: '🏦', label: 'Accounts' },
     { id: 'reports', icon: '📊', label: 'Reports' },
 ] as const;
 
@@ -20,8 +21,8 @@ export default function BottomNav({ activePage, onNavigate, onAdd }: Props) {
     return (
         <nav className="bottom-nav">
             <div className="bottom-nav-inner">
-                {/* First 2 tabs */}
-                {TABS.slice(0, 2).map(tab => (
+                {/* First 3 tabs */}
+                {TABS.slice(0, 3).map(tab => (
                     <button
                         key={tab.id}
                         className={`bottom-nav-item${activePage === tab.id ? ' active' : ''}`}
@@ -40,7 +41,7 @@ export default function BottomNav({ activePage, onNavigate, onAdd }: Props) {
                 </div>
 
                 {/* Last 2 tabs */}
-                {TABS.slice(2).map(tab => (
+                {TABS.slice(3).map(tab => (
                     <button
                         key={tab.id}
                         className={`bottom-nav-item${activePage === tab.id ? ' active' : ''}`}

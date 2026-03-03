@@ -10,7 +10,28 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Tracksy – Budget & Expense Tracker",
   description: "A personal finance tracker to manage your budgets and expenses with local-first storage.",
+  manifest: "/manifest.json",
 };
+
+export const viewport = {
+  themeColor: "#6366f1",
+};
+
+function SWRegistration() {
+  return (
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+              navigator.serviceWorker.register('/sw.js');
+            });
+          }
+        `,
+      }}
+    />
+  );
+}
 
 export default function RootLayout({
   children,
@@ -21,6 +42,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${inter.variable} antialiased`}>
         {children}
+        <SWRegistration />
       </body>
     </html>
   );

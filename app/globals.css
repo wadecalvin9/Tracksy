@@ -1107,7 +1107,20 @@ body {
     font-size: 17px;
   }
 
-  .topbar-actions,
+  .topbar-actions {
+    display: none;
+    /* Hide by default on mobile */
+  }
+
+  .topbar-actions.mobile-action-visible {
+    display: flex;
+    /* Selective override for Accounts/Budgets */
+  }
+
+  .show-mobile {
+    display: inline-block;
+  }
+
   .hide-mobile {
     display: none;
   }

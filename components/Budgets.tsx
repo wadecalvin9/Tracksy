@@ -7,20 +7,20 @@ import RadialProgress from '@/components/RadialProgress';
 interface Props {
     db: TracksyDB;
     showToast: (msg: string, type?: 'success' | 'error') => void;
+    openAddSignal?: number;
 }
 
 const fmt = (n: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
 
-export default function Budgets({ db, showToast }: Props) {
+export default function Budgets({ db, showToast, openAddSignal }: Props) {
     const [budgets, setBudgets] = useState<Budget[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [txns, setTxns] = useState<Transaction[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState<Budget | null>(null);
 
-    const blank: { categoryId: string; amount: string; period: 'monthly' | 'weekly' | 'yearly' } =
-        { categoryId: '', amount: '', period: 'monthly' };
+    const blank = { categoryId: '', amount: '', period: 'monthly' as Budget['period'] };
     const [form, setForm] = useState(blank);
 
     const load = useCallback(async () => {
@@ -34,6 +34,20 @@ export default function Budgets({ db, showToast }: Props) {
 
     useEffect(() => { load(); }, [load]);
 
+    const openAdd = useCallback(() => {
+        setEditing(null);
+        // Pre-select first category that doesn't have a budget
+        const noBudget = categories.filter(c => c.type === 'expense' && !budgets.find(b => b.categoryId === c.id));
+        setForm({ ...blank, categoryId: noBudget[0]?.id?.toString() ?? '' });
+        setShowModal(true);
+    }, [blank, categories, budgets]);
+
+    useEffect(() => {
+        if (openAddSignal && openAddSignal > 0) {
+            openAdd();
+        }
+    }, [openAddSignal, openAdd]);
+
     const catMap = Object.fromEntries(categories.map(c => [c.id!, c]));
 
     // Compute this month's spending per category
@@ -45,13 +59,6 @@ export default function Budgets({ db, showToast }: Props) {
             monthSpend[tx.categoryId] = (monthSpend[tx.categoryId] ?? 0) + tx.amount;
         }
     });
-
-    const openAdd = () => {
-        setEditing(null);
-        const noBudget = categories.filter(c => c.type === 'expense' && !budgets.find(b => b.categoryId === c.id));
-        setForm({ ...blank, categoryId: noBudget[0]?.id?.toString() ?? '' });
-        setShowModal(true);
-    };
 
     const openEdit = (b: Budget) => {
         setEditing(b);
@@ -102,9 +109,10 @@ export default function Budgets({ db, showToast }: Props) {
                     <div className="topbar-title" style={{ fontSize: 18 }}>Budget Management</div>
                     <div className="topbar-subtitle">Tracking {budgets.length} categories</div>
                 </div>
-                <div className="topbar-actions">
-                    <button className="btn btn-primary" onClick={openAdd} disabled={noBudgetCats.length === 0 && !editing}>
-                        + New Budget
+                <div className="topbar-actions mobile-action-visible">
+                    <button className="btn btn-primary btn-sm" onClick={openAdd} disabled={noBudgetCats.length === 0 && !editing}>
+                        <span className="hide-mobile">+ New Budget</span>
+                        <span className="show-mobile">+ Budget</span>
                     </button>
                 </div>
             </div>
