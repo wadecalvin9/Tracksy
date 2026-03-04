@@ -2,7 +2,7 @@
 
 Tracksy is a professional, local-first personal finance application designed to provide a premium and secure experience for managing your money.
 
-![Tracksy Dashboard](public/screenshots/Dashboard.png)
+![Tracksy Dashboard](public/screenshots/Dashboard1.png)
 
 ## Key Features
 

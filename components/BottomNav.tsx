@@ -13,9 +13,9 @@ import type { Page } from '@/app/page';
 const TABS = [
     { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Home' },
     { id: 'transactions', icon: <ArrowUpDown size={18} />, label: 'Txns' },
-    { id: 'reports', icon: <BarChart3 size={18} />, label: 'Reports' },
-    // FAB is center
     { id: 'budgets', icon: <Target size={18} />, label: 'Budget' },
+    // FAB is center
+    { id: 'reports', icon: <BarChart3 size={18} />, label: 'Reports' },
     { id: 'settings', icon: <Cog size={18} />, label: 'Settings' },
 ] as const;
 
