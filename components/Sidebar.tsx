@@ -7,9 +7,11 @@ import {
     Landmark,
     BarChart3,
     Wallet,
-    Cog
+    Cog,
 } from 'lucide-react';
 import type { Page } from '@/app/page';
+import type { User } from 'firebase/auth';
+import SyncStatus from './SyncStatus';
 
 const NAV = [
     { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
@@ -20,12 +22,26 @@ const NAV = [
     { id: 'settings', icon: <Cog size={18} />, label: 'Settings' },
 ] as const;
 
+type SyncState = 'idle' | 'syncing' | 'synced' | 'error' | 'offline';
+
 export default function Sidebar({
     activePage,
     onNavigate,
+    user,
+    syncState,
+    lastSync,
+    onSignInClick,
+    onSignOut,
+    onSyncNow,
 }: {
     activePage: Page;
     onNavigate: (p: Page) => void;
+    user: User | null;
+    syncState: SyncState;
+    lastSync: Date | null;
+    onSignInClick: () => void;
+    onSignOut: () => void;
+    onSyncNow: () => void;
 }) {
     return (
         <aside className="sidebar">
@@ -51,11 +67,14 @@ export default function Sidebar({
             ))}
 
             <div className="sidebar-footer">
-                <div style={{ padding: '12px', borderRadius: '12px', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }}>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Storage</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#818cf8' }}>IndexedDB via Dexie</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>100% local — no server</div>
-                </div>
+                <SyncStatus
+                    user={user}
+                    syncState={syncState}
+                    lastSync={lastSync}
+                    onSignInClick={onSignInClick}
+                    onSignOut={onSignOut}
+                    onSyncNow={onSyncNow}
+                />
             </div>
         </aside>
     );

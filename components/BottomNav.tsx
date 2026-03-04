@@ -16,6 +16,7 @@ const TABS = [
     { id: 'budgets', icon: <Target size={18} />, label: 'Budget' },
     // FAB is center
     { id: 'reports', icon: <BarChart3 size={18} />, label: 'Reports' },
+    { id: 'accounts', icon: <Landmark size={18} />, label: 'Accounts' },
     { id: 'settings', icon: <Cog size={18} />, label: 'Settings' },
 ] as const;
 

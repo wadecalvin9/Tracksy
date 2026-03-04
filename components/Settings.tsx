@@ -1,14 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Cog, Globe, CreditCard, Shield, Bell, User, HardDrive, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Cog, Globe, Shield, Bell, User, HardDrive, RefreshCw, AlertTriangle, Cloud, CloudOff, LogIn, LogOut } from 'lucide-react';
 import { getCurrency, setCurrency, getUserName, setUserName, getStorageInfo, requestPersistence, CURRENCIES } from '@/lib/db';
+import type { User as FirebaseUser } from 'firebase/auth';
+import type { SyncState } from '@/app/page';
 
 interface Props {
     showToast: (msg: string, type?: 'success' | 'error') => void;
+    user?: FirebaseUser | null;
+    syncState?: SyncState;
+    lastSync?: Date | null;
+    onSignInClick?: () => void;
+    onSignOut?: () => void;
+    onSyncNow?: () => void;
 }
 
-export default function Settings({ showToast }: Props) {
+export default function Settings({ showToast, user, syncState, lastSync, onSignInClick, onSignOut, onSyncNow }: Props) {
     const [currency, setCurr] = useState('USD');
     const [userName, setUName] = useState('User');
     const [storage, setStorage] = useState<{ usage: number, quota: number, persisted: boolean } | null>(null);
@@ -106,7 +114,7 @@ export default function Settings({ showToast }: Props) {
                             <div className="storage-stat">
                                 <span className="stat-label">Storage Mode:</span>
                                 <span className={`stat-value ${storage?.persisted ? 'persisted' : 'best-effort'}`}>
-                                    {storage?.persisted ? 'Persistent ✅' : 'Best Effort ⚠️'}
+                                    {storage?.persisted ? 'Persistent' : 'Best Effort ⚠️'}
                                 </span>
                             </div>
                             <div className="storage-stat">
@@ -130,6 +138,66 @@ export default function Settings({ showToast }: Props) {
                                 {storage?.persisted ? 'Data is Protected' : 'Request Persistence'}
                             </button>
                         </div>
+                    </section>
+
+                    {/* Cloud Sync Section */}
+                    <section className="settings-section">
+                        <div className="section-header">
+                            <Cloud size={20} className="section-icon" />
+                            <div>
+                                <h3 className="section-title">Cloud Sync</h3>
+                                <p className="section-desc">Back up and sync across devices via Firebase</p>
+                            </div>
+                        </div>
+
+                        {!user ? (
+                            <div>
+                                <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.6 }}>
+                                    Sign in with Google to automatically back up your data and access it from any device.
+                                </p>
+                                <button className="google-signin-btn" onClick={onSignInClick} style={{ width: '100%', justifyContent: 'center' }}>
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4" />
+                                        <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853" />
+                                        <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05" />
+                                        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335" />
+                                    </svg>
+                                    <span>Sign in with Google</span>
+                                </button>
+                            </div>
+                        ) : (
+                            <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                                    {user.photoURL && <img src={user.photoURL} alt="" width={40} height={40} style={{ borderRadius: '50%' }} />}
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontWeight: 600, fontSize: 14 }}>{user.displayName}</div>
+                                        <div style={{ fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</div>
+                                    </div>
+                                </div>
+                                <div className="storage-stat" style={{ marginBottom: 8 }}>
+                                    <span className="stat-label">Status:</span>
+                                    <span className={`stat-value ${syncState === 'synced' ? 'persisted' : syncState === 'error' ? 'best-effort' : ''}`}>
+                                        {syncState === 'syncing' ? '⏳ Syncing…' : syncState === 'synced' ? '✅ Synced' : syncState === 'error' ? '❌ Sync error' : '☁️ Connected'}
+                                    </span>
+                                </div>
+                                {lastSync && (
+                                    <div className="storage-stat" style={{ marginBottom: 16 }}>
+                                        <span className="stat-label">Last synced:</span>
+                                        <span className="stat-value" style={{ fontSize: 12 }}>{lastSync.toLocaleString()}</span>
+                                    </div>
+                                )}
+                                <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                                    <button className="btn btn-primary" onClick={onSyncNow} disabled={syncState === 'syncing'} style={{ flex: 1, justifyContent: 'center', gap: 6 }}>
+                                        <RefreshCw size={14} />
+                                        {syncState === 'syncing' ? 'Syncing…' : 'Sync Now'}
+                                    </button>
+                                    <button className="btn btn-secondary" onClick={onSignOut} style={{ flex: 1, justifyContent: 'center', gap: 6 }}>
+                                        <LogOut size={14} />
+                                        Sign Out
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </section>
 
                     <section className="settings-section">
