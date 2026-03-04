@@ -262,7 +262,7 @@ export default function Transactions({ db, showToast, openAddSignal, currency }:
 
                         <div className="form-row">
                             <div className="form-group">
-                                <label className="form-label">Amount (USD)</label>
+                                <label className="form-label">Amount ({currency || 'USD'})</label>
                                 <input className="form-input" type="number" placeholder="0.00" min="0" step="0.01"
                                     value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} />
                             </div>

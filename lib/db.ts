@@ -103,6 +103,33 @@ export async function setUserName(name: string) {
     await db.settings.put({ key: 'userName', value: name });
 }
 
+// Ensure data is persistent (won't be cleared by browser)
+export async function requestPersistence() {
+    if (typeof window !== 'undefined' && navigator.storage && navigator.storage.persist) {
+        try {
+            const isPersisted = await navigator.storage.persisted();
+            if (!isPersisted) {
+                await navigator.storage.persist();
+            }
+        } catch (e) {
+            console.warn('Storage persistence request failed', e);
+        }
+    }
+}
+
+export async function getStorageInfo() {
+    if (typeof window !== 'undefined' && navigator.storage && navigator.storage.estimate) {
+        const estimate = await navigator.storage.estimate();
+        const persisted = await navigator.storage.persisted();
+        return {
+            usage: estimate.usage || 0,
+            quota: estimate.quota || 0,
+            persisted
+        };
+    }
+    return null;
+}
+
 // Seed basic infrastructure (categories) if empty
 export async function seedInfrastructure() {
     const catCount = await db.categories.count();

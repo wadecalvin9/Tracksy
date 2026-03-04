@@ -30,6 +30,15 @@
   padding: 0;
 }
 
+/* Visibility Utilities - Responsive */
+.show-mobile {
+  display: none !important;
+}
+
+.hide-mobile {
+  display: inline-block !important;
+}
+
 html,
 body,
 #__next {
@@ -826,7 +835,7 @@ body {
 
 .filter-chip.active {
   background: rgba(99, 102, 241, 0.15);
-  color: #818cf8;
+  color: #f8f681;
   border-color: rgba(99, 102, 241, 0.3);
 }
 
@@ -1110,11 +1119,11 @@ body {
   }
 
   .show-mobile {
-    display: inline-block;
+    display: inline-block !important;
   }
 
   .hide-mobile {
-    display: none;
+    display: none !important;
   }
 
   /* Page */

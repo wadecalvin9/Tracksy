@@ -33,7 +33,7 @@ const ICONS: Record<string, React.ReactNode> = {
     cash: <Coins size={20} />,
 };
 
-const blank = { name: '', type: 'checking' as Account['type'], balance: '', currency: 'USD', color: COLORS[0] };
+const getBlank = (curr: string) => ({ name: '', type: 'checking' as Account['type'], balance: '', currency: curr || 'USD', color: COLORS[0] });
 
 export default function Accounts({ db, showToast, openAddSignal, currency }: Props) {
     const fmt = (n: number) =>
@@ -42,7 +42,7 @@ export default function Accounts({ db, showToast, openAddSignal, currency }: Pro
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState<Account | null>(null);
-    const [form, setForm] = useState(blank);
+    const [form, setForm] = useState(getBlank(currency));
 
     const load = useCallback(async () => {
         setAccounts(await db.accounts.toArray());
@@ -52,7 +52,7 @@ export default function Accounts({ db, showToast, openAddSignal, currency }: Pro
 
     const openAdd = useCallback(() => {
         setEditing(null);
-        setForm(blank);
+        setForm(getBlank(currency));
         setShowModal(true);
     }, []);
 
@@ -200,7 +200,7 @@ export default function Accounts({ db, showToast, openAddSignal, currency }: Pro
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Initial Balance</label>
+                                <label className="form-label">Initial Balance ({currency || 'USD'})</label>
                                 <input className="form-input" type="number" step="0.01" placeholder="0.00" value={form.balance}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f: any) => ({ ...f, balance: e.target.value }))} />
                             </div>

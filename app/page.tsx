@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { db, seedInfrastructure, getCurrency, getUserName } from '@/lib/db';
+import { db, seedInfrastructure, getCurrency, getUserName, requestPersistence } from '@/lib/db';
 import Sidebar from '@/components/Sidebar';
 import BottomNav from '@/components/BottomNav';
 import Dashboard from '@/components/Dashboard';
@@ -37,7 +37,8 @@ export default function Home() {
     seedInfrastructure().then(() => {
       Promise.all([
         getCurrency().then(setCurrencyState),
-        getUserName().then(setUserNameState)
+        getUserName().then(setUserNameState),
+        requestPersistence()
       ]).then(() => setReady(true));
     });
   }, []);
