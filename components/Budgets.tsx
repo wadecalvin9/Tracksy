@@ -10,6 +10,7 @@ import {
     AlertCircle
 } from 'lucide-react';
 import type { TracksyDB, Budget, Category, Transaction } from '@/lib/db';
+import { generateId } from '@/lib/db';
 import RadialProgress from '@/components/RadialProgress';
 
 interface Props {
@@ -40,7 +41,7 @@ export default function Budgets({ db, showToast, openAddSignal, currency }: Prop
             db.categories.toArray(),
             db.transactions.toArray(),
         ]);
-        setBudgets(b); setCategories(c); setTxns(t);
+        setBudgets(b.filter(x => !x.deletedAt)); setCategories(c); setTxns(t.filter(x => !x.deletedAt));
     }, [db]);
 
     useEffect(() => { load(); }, [load]);
@@ -65,7 +66,7 @@ export default function Budgets({ db, showToast, openAddSignal, currency }: Prop
 
     // Compute this month's spending per category
     const now = new Date();
-    const monthSpend: Record<number, number> = {};
+    const monthSpend: Record<string, number> = {};
     txns.forEach(tx => {
         const d = new Date(tx.date);
         if (tx.type === 'expense' && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
@@ -84,26 +85,23 @@ export default function Budgets({ db, showToast, openAddSignal, currency }: Prop
         const amount = parseFloat(form.amount);
         if (isNaN(amount) || amount <= 0) { showToast('Invalid amount', 'error'); return; }
 
-        const payload: Omit<Budget, 'id'> = {
-            categoryId: parseInt(form.categoryId),
+        const payload: Budget = {
+            id: editing?.id || generateId(),
+            categoryId: form.categoryId,
             amount,
             period: form.period,
-            startDate: new Date(now.getFullYear(), now.getMonth(), 1),
+            startDate: editing?.startDate || new Date(now.getFullYear(), now.getMonth(), 1),
+            updatedAt: new Date(),
         };
 
-        if (editing) {
-            await db.budgets.update(editing.id!, payload);
-            showToast('Budget updated');
-        } else {
-            await db.budgets.add(payload);
-            showToast('Budget created');
-        }
+        await db.budgets.put(payload);
+        showToast(editing ? 'Budget updated' : 'Budget created');
         setShowModal(false);
         load();
     };
 
     const handleDelete = async (b: Budget) => {
-        await db.budgets.delete(b.id!);
+        await db.budgets.update(b.id!, { deletedAt: new Date(), updatedAt: new Date() });
         showToast('Budget deleted');
         load();
     };

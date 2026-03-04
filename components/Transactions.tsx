@@ -11,6 +11,7 @@ import {
     Receipt
 } from 'lucide-react';
 import type { TracksyDB, Transaction, Account, Category } from '@/lib/db';
+import { generateId } from '@/lib/db';
 
 interface Props {
     db: TracksyDB;
@@ -55,7 +56,7 @@ export default function Transactions({ db, showToast, openAddSignal, currency }:
             db.accounts.toArray(),
             db.categories.toArray(),
         ]);
-        setTxns(t); setAccounts(a); setCategories(c);
+        setTxns(t.filter(tx => !tx.deletedAt)); setAccounts(a); setCategories(c);
     }, [db]);
 
     useEffect(() => { load(); }, [load]);
@@ -95,14 +96,16 @@ export default function Transactions({ db, showToast, openAddSignal, currency }:
         const amount = parseFloat(form.amount);
         if (isNaN(amount) || amount <= 0) { showToast('Invalid amount', 'error'); return; }
 
-        const payload: Omit<Transaction, 'id'> = {
+        const payload: Transaction = {
+            id: editing?.id || generateId(),
             type: form.type,
             amount,
             description: form.description,
-            accountId: parseInt(form.accountId),
-            categoryId: parseInt(form.categoryId),
+            accountId: form.accountId,
+            categoryId: form.categoryId,
             date: new Date(form.date),
-            createdAt: new Date(),
+            createdAt: editing?.createdAt || new Date(),
+            updatedAt: new Date(),
         };
 
         // Update account balance
@@ -114,17 +117,12 @@ export default function Transactions({ db, showToast, openAddSignal, currency }:
                 const oldDelta = editing.type === 'income' ? -editing.amount : editing.amount;
                 await db.accounts.update(payload.accountId, { balance: acc.balance + oldDelta + delta });
             } else {
-                await db.accounts.update(payload.accountId, { balance: acc.balance + delta });
+                await db.accounts.update(payload.accountId, { balance: acc.balance + delta, updatedAt: new Date() });
             }
         }
 
-        if (editing) {
-            await db.transactions.update(editing.id!, payload);
-            showToast('Transaction updated');
-        } else {
-            await db.transactions.add(payload);
-            showToast('Transaction added');
-        }
+        await db.transactions.put(payload);
+        showToast(editing ? 'Transaction updated' : 'Transaction added');
 
         setShowModal(false);
         load();
@@ -137,7 +135,7 @@ export default function Transactions({ db, showToast, openAddSignal, currency }:
             const delta = tx.type === 'income' ? -tx.amount : tx.amount;
             await db.accounts.update(tx.accountId, { balance: acc.balance + delta });
         }
-        await db.transactions.delete(tx.id!);
+        await db.transactions.update(tx.id!, { deletedAt: new Date(), updatedAt: new Date() });
         showToast('Transaction deleted');
         load();
     };

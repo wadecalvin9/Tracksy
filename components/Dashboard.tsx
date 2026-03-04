@@ -47,7 +47,7 @@ export default function Dashboard({ db, showToast, onNavigate, currency, userNam
             db.categories.toArray(),
             db.budgets.toArray(),
         ]);
-        setAccounts(a); setTxns(t); setCategories(c); setBudgets(b);
+        setAccounts(a.filter(x => !x.deletedAt)); setTxns(t.filter(x => !x.deletedAt)); setCategories(c); setBudgets(b.filter(x => !x.deletedAt));
     }, [db]);
 
     useEffect(() => { load(); }, [load]);

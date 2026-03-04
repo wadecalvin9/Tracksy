@@ -50,32 +50,37 @@ function toFirestore(data: any) {
     return result;
 }
 
-async function syncTable<T extends { id?: number; updatedAt?: Date }>(
+async function syncTable<T extends { updatedAt?: Date; deletedAt?: Date }>(
     userId: string,
     tableName: string,
-    localTable: any
+    localTable: any,
+    idKey: string = 'id'
 ) {
     const colRef = collection(firestore, 'users', userId, tableName);
-    const localItems: T[] = await localTable.toArray();
+    const localItems: any[] = await localTable.toArray();
+    const snapshot = await getDocs(query(colRef));
+    const remoteItems = new Map(snapshot.docs.map(d => [d.id, fromFirestore(d.data())]));
 
-    // Push local → Firestore
-    for (const item of localItems) {
-        if (!item.id) continue;
-        const docRef = doc(colRef, item.id.toString());
-        await setDoc(docRef, toFirestore({ ...item, updatedAt: item.updatedAt || new Date() }), { merge: true });
+    // 1. Local -> Remote
+    for (const local of localItems) {
+        const id = local[idKey]?.toString();
+        if (!id) continue;
+        const remote = remoteItems.get(id);
+
+        if (!remote || (local.updatedAt && remote.updatedAt && local.updatedAt > remote.updatedAt)) {
+            await setDoc(doc(colRef, id), toFirestore(local), { merge: true });
+        }
     }
 
-    // Pull Firestore → local (only NEW records not in local DB)
-    const snapshot = await getDocs(query(colRef));
-    const localIds = new Set(localItems.map((i) => i.id?.toString()));
+    // 2. Remote -> Local
+    for (const [id, remote] of remoteItems.entries()) {
+        const local = localItems.find(i => i[idKey]?.toString() === id);
 
-    for (const docSnap of snapshot.docs) {
-        if (!localIds.has(docSnap.id)) {
-            const data = fromFirestore(docSnap.data()) as T;
-            // Add to local, preserving the original ID if possible
-            const numId = parseInt(docSnap.id);
-            if (!isNaN(numId)) {
-                await localTable.put({ ...data, id: numId });
+        if (!local || (remote.updatedAt && local.updatedAt && remote.updatedAt > local.updatedAt)) {
+            if (remote.deletedAt) {
+                if (local) await localTable.delete(local[idKey]);
+            } else {
+                await localTable.put(remote);
             }
         }
     }
@@ -89,9 +94,10 @@ export async function syncAll(userId: string): Promise<void> {
         await syncTable<Transaction>(userId, 'transactions', db.transactions);
         await syncTable<Budget>(userId, 'budgets', db.budgets);
         await syncTable<Category>(userId, 'categories', db.categories);
+        await syncTable<any>(userId, 'settings', db.settings, 'key');
 
         const now = new Date();
-        await db.settings.put({ key: 'lastSync', value: now.toISOString() });
+        await db.settings.put({ key: 'lastSync', value: now.toISOString(), updatedAt: now });
         setStatus('synced', now);
     } catch (e) {
         console.error('Sync failed:', e);

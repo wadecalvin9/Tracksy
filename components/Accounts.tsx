@@ -14,6 +14,7 @@ import {
     Plus
 } from 'lucide-react';
 import type { TracksyDB, Account } from '@/lib/db';
+import { generateId } from '@/lib/db';
 
 interface Props {
     db: TracksyDB;
@@ -45,7 +46,8 @@ export default function Accounts({ db, showToast, openAddSignal, currency }: Pro
     const [form, setForm] = useState(getBlank(currency));
 
     const load = useCallback(async () => {
-        setAccounts(await db.accounts.toArray());
+        const all = await db.accounts.toArray();
+        setAccounts(all.filter(a => !a.deletedAt));
     }, [db]);
 
     useEffect(() => { load(); }, [load]);
@@ -73,16 +75,14 @@ export default function Accounts({ db, showToast, openAddSignal, currency }: Pro
     const handleSave = async () => {
         if (!form.name) { showToast('Enter account name', 'error'); return; }
         const balance = parseFloat(form.balance || '0');
-        const payload: Omit<Account, 'id'> = {
-            name: form.name, type: form.type, balance, currency: form.currency, color: form.color, createdAt: new Date(),
+        const payload: Account = {
+            id: editing?.id || generateId(),
+            name: form.name, type: form.type, balance, currency: form.currency, color: form.color,
+            createdAt: editing?.createdAt || new Date(),
+            updatedAt: new Date(),
         };
-        if (editing) {
-            await db.accounts.update(editing.id!, payload);
-            showToast('Account updated');
-        } else {
-            await db.accounts.add(payload);
-            showToast('Account added');
-        }
+        await db.accounts.put(payload);
+        showToast(editing ? 'Account updated' : 'Account added');
         setShowModal(false);
         load();
     };
@@ -90,7 +90,7 @@ export default function Accounts({ db, showToast, openAddSignal, currency }: Pro
     const handleDelete = async (acc: Account) => {
         const txCount = await db.transactions.where('accountId').equals(acc.id!).count();
         if (txCount > 0) { showToast(`Cannot delete: ${txCount} transactions linked`, 'error'); return; }
-        await db.accounts.delete(acc.id!);
+        await db.accounts.update(acc.id!, { deletedAt: new Date(), updatedAt: new Date() });
         showToast('Account deleted');
         load();
     };

@@ -51,13 +51,13 @@ export default function Reports({ db, showToast, currency }: Props) {
     const savingsRate = income > 0 ? (savings / income) * 100 : 0;
 
     // Spending by category
-    const byCat: Record<number, number> = {};
+    const byCat: Record<string, number> = {};
     filtered.filter(t => t.type === 'expense').forEach(t => {
         byCat[t.categoryId] = (byCat[t.categoryId] ?? 0) + t.amount;
     });
 
     const catRanked = Object.entries(byCat)
-        .map(([id, amt]) => ({ cat: catMap[parseInt(id)], amt }))
+        .map(([id, amt]) => ({ cat: catMap[id], amt }))
         .filter(x => x.cat)
         .sort((a, b) => b.amt - a.amt);
 
@@ -80,12 +80,12 @@ export default function Reports({ db, showToast, currency }: Props) {
     const maxTrend = Math.max(...trend.flatMap(t => [t.income, t.expense]), 1);
 
     // Top income sources
-    const byIncomeCat: Record<number, number> = {};
+    const byIncomeCat: Record<string, number> = {};
     filtered.filter(t => t.type === 'income').forEach(t => {
         byIncomeCat[t.categoryId] = (byIncomeCat[t.categoryId] ?? 0) + t.amount;
     });
     const incomeRanked = Object.entries(byIncomeCat)
-        .map(([id, amt]) => ({ cat: catMap[parseInt(id)], amt }))
+        .map(([id, amt]) => ({ cat: catMap[id], amt }))
         .filter(x => x.cat)
         .sort((a, b) => b.amt - a.amt);
 
