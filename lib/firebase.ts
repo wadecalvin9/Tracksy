@@ -19,7 +19,7 @@ const firebaseConfig = {
 };
 
 
-// Prevent re-initialization during hot reload
+// Prevent re-initialization during hot reloads
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
 export const auth = getAuth(app);
