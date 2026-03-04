@@ -1,6 +1,18 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import {
+    User,
+    Bell,
+    Plus,
+    TrendingUp,
+    TrendingDown,
+    Wallet,
+    CreditCard,
+    Search,
+    ChevronRight,
+    Target
+} from 'lucide-react';
 import type { TracksyDB, Transaction, Account, Category, Budget } from '@/lib/db';
 import type { Page } from '@/app/page';
 
@@ -8,17 +20,21 @@ interface Props {
     db: TracksyDB;
     showToast: (msg: string, type?: 'success' | 'error') => void;
     onNavigate: (p: Page) => void;
+    currency: string;
+    userName: string;
 }
 
-const fmt = (n: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n);
+// Moved fmt inside component to use currency prop
 
 const fmtDate = (d: Date) =>
     new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export default function Dashboard({ db, showToast, onNavigate }: Props) {
+export default function Dashboard({ db, showToast, onNavigate, currency, userName }: Props) {
+    const fmt = (n: number) =>
+        new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD', minimumFractionDigits: 2 }).format(n);
+
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [txns, setTxns] = useState<Transaction[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
@@ -36,29 +52,29 @@ export default function Dashboard({ db, showToast, onNavigate }: Props) {
 
     useEffect(() => { load(); }, [load]);
 
-    const netWorth = accounts.reduce((s, a) => s + a.balance, 0);
+    const netWorth = accounts.reduce((s: number, a: Account) => s + a.balance, 0);
     const now = new Date();
-    const thisMonth = txns.filter(t => {
+    const thisMonth = txns.filter((t: Transaction) => {
         const d = new Date(t.date);
         return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     });
 
-    const monthIncome = thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const monthExpense = thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const monthIncome = thisMonth.filter((t: Transaction) => t.type === 'income').reduce((s: number, t: Transaction) => s + t.amount, 0);
+    const monthExpense = thisMonth.filter((t: Transaction) => t.type === 'expense').reduce((s: number, t: Transaction) => s + t.amount, 0);
     const savings = monthIncome - monthExpense;
 
     // Bar chart: last 6 months expenses
     const barData = Array.from({ length: 6 }, (_, i) => {
         const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
-        const total = txns.filter(t => {
+        const total = txns.filter((t: Transaction) => {
             const td = new Date(t.date);
             return td.getMonth() === d.getMonth() && td.getFullYear() === d.getFullYear() && t.type === 'expense';
-        }).reduce((s, t) => s + t.amount, 0);
+        }).reduce((s: number, t: Transaction) => s + t.amount, 0);
         return { label: MONTHS[d.getMonth()], value: total };
     });
-    const maxBar = Math.max(...barData.map(b => b.value), 1);
+    const maxBar = Math.max(...barData.map((b: { value: number }) => b.value), 1);
 
-    const catMap = Object.fromEntries(categories.map(c => [c.id!, c]));
+    const catMap = Object.fromEntries(categories.map((c: Category) => [c.id!, c]));
     const recent = txns.slice(0, 8);
 
     return (
@@ -66,22 +82,22 @@ export default function Dashboard({ db, showToast, onNavigate }: Props) {
             <div className="topbar">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{
-                        width: 40, height: 40, borderRadius: '50%', background: 'var(--accent)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
-                        border: '2px solid rgba(255,255,255,0.1)'
+                        width: 36, height: 36, borderRadius: '50%', background: 'var(--bg-card-hover)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: 'var(--text-secondary)', border: '1px solid var(--border)'
                     }}>
-                        👤
+                        <User size={18} />
                     </div>
                     <div>
                         <div className="topbar-subtitle" style={{ fontSize: 11, marginBottom: -2 }}>Hello!</div>
-                        <div className="topbar-title" style={{ fontSize: 16 }}>Daisy Murphy</div>
+                        <div className="topbar-title" style={{ fontSize: 16 }}>{userName || 'User'}</div>
                     </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <div style={{ fontSize: 20, cursor: 'pointer', position: 'relative' }}>
-                        🔔
+                    <div style={{ fontSize: 20, cursor: 'pointer', position: 'relative', color: 'var(--text-secondary)' }}>
+                        <Bell size={20} />
                         <div style={{
-                            position: 'absolute', top: 2, right: 0, width: 8, height: 8,
+                            position: 'absolute', top: 0, right: 0, width: 8, height: 8,
                             background: 'var(--red)', borderRadius: '50%', border: '2px solid var(--bg-secondary)'
                         }} />
                     </div>
@@ -107,15 +123,15 @@ export default function Dashboard({ db, showToast, onNavigate }: Props) {
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap' }} className="net-worth-stats-container">
                         <div className="net-worth-mini">
-                            <div className="net-worth-mini-label">↑ Income this month</div>
+                            <div className="net-worth-mini-label"><TrendingUp size={12} style={{ display: 'inline', marginRight: 4 }} /> Income this month</div>
                             <div className="net-worth-mini-value" style={{ color: 'var(--green)' }}>{fmt(monthIncome)}</div>
                         </div>
                         <div className="net-worth-mini">
-                            <div className="net-worth-mini-label">↓ Expenses this month</div>
+                            <div className="net-worth-mini-label"><TrendingDown size={12} style={{ display: 'inline', marginRight: 4 }} /> Expenses this month</div>
                             <div className="net-worth-mini-value" style={{ color: 'var(--red)' }}>{fmt(monthExpense)}</div>
                         </div>
                         <div className="net-worth-mini">
-                            <div className="net-worth-mini-label">💰 Savings</div>
+                            <div className="net-worth-mini-label"><Wallet size={12} style={{ display: 'inline', marginRight: 4 }} /> Savings</div>
                             <div className="net-worth-mini-value" style={{ color: savings >= 0 ? 'var(--green)' : 'var(--red)' }}>{fmt(savings)}</div>
                         </div>
                     </div>
@@ -129,22 +145,24 @@ export default function Dashboard({ db, showToast, onNavigate }: Props) {
                     </div>
                     {budgets.length === 0 ? (
                         <div className="card" style={{ padding: '24px', textAlign: 'center' }}>
-                            <div style={{ fontSize: 24, marginBottom: 8 }}>🎯</div>
+                            <div style={{ color: 'var(--text-muted)', marginBottom: 12 }}>
+                                <Target size={32} style={{ margin: '0 auto' }} />
+                            </div>
                             <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>No budgets set yet</div>
                             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>Set spending limits to track your progress</div>
                             <button className="btn btn-secondary btn-sm" onClick={() => onNavigate('budgets')}>Set your first budget</button>
                         </div>
                     ) : (
                         <div className="two-col" style={{ gap: 12 }}>
-                            {budgets.slice(0, 2).map(b => {
+                            {budgets.slice(0, 2).map((b: Budget) => {
                                 const cat = catMap[b.categoryId];
-                                const spent = txns.filter(t => {
+                                const spent = txns.filter((t: Transaction) => {
                                     const d = new Date(t.date);
                                     return t.type === 'expense' &&
                                         t.categoryId === b.categoryId &&
                                         d.getMonth() === now.getMonth() &&
                                         d.getFullYear() === now.getFullYear();
-                                }).reduce((s, t) => s + t.amount, 0);
+                                }).reduce((s: number, t: Transaction) => s + t.amount, 0);
                                 const pct = Math.min((spent / b.amount) * 100, 100);
                                 const over = spent > b.amount;
 
@@ -182,25 +200,25 @@ export default function Dashboard({ db, showToast, onNavigate }: Props) {
                 {/* Stat cards */}
                 <div className="stat-grid">
                     <div className="stat-card accent">
-                        <div className="stat-icon accent">💼</div>
+                        <div className="stat-icon accent"><Wallet size={18} /></div>
                         <div className="stat-label">Total Balance</div>
                         <div className="stat-value accent">{fmt(netWorth)}</div>
                         <div className="stat-change">All accounts combined</div>
                     </div>
                     <div className="stat-card green">
-                        <div className="stat-icon green">📥</div>
+                        <div className="stat-icon green"><TrendingUp size={18} /></div>
                         <div className="stat-label">Income</div>
                         <div className="stat-value green">{fmt(monthIncome)}</div>
                         <div className="stat-change">This month</div>
                     </div>
                     <div className="stat-card red">
-                        <div className="stat-icon red">📤</div>
+                        <div className="stat-icon red"><TrendingDown size={18} /></div>
                         <div className="stat-label">Expenses</div>
                         <div className="stat-value red">{fmt(monthExpense)}</div>
                         <div className="stat-change">This month</div>
                     </div>
                     <div className="stat-card amber">
-                        <div className="stat-icon amber">💳</div>
+                        <div className="stat-icon amber"><CreditCard size={18} /></div>
                         <div className="stat-label">Transactions</div>
                         <div className="stat-value amber">{thisMonth.length}</div>
                         <div className="stat-change">This month</div>
@@ -216,7 +234,7 @@ export default function Dashboard({ db, showToast, onNavigate }: Props) {
                         </div>
                         {recent.length === 0 ? (
                             <div className="empty-state">
-                                <div className="empty-icon">📭</div>
+                                <div className="empty-icon"><Search size={32} /></div>
                                 <p>No transactions yet. Add one to get started!</p>
                             </div>
                         ) : (
@@ -229,7 +247,7 @@ export default function Dashboard({ db, showToast, onNavigate }: Props) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {recent.map(tx => {
+                                    {recent.map((tx: Transaction) => {
                                         const cat = catMap[tx.categoryId];
                                         return (
                                             <tr key={tx.id}>
@@ -297,7 +315,7 @@ export default function Dashboard({ db, showToast, onNavigate }: Props) {
                         <span className="section-action" onClick={() => onNavigate('accounts')}>Manage →</span>
                     </div>
                     <div className="three-col">
-                        {accounts.map(acc => (
+                        {accounts.map((acc: Account) => (
                             <div key={acc.id} className="account-card">
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                                     <div className="account-dot" style={{ background: acc.color }} />

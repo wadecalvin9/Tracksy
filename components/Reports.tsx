@@ -6,14 +6,17 @@ import type { TracksyDB, Transaction, Category } from '@/lib/db';
 interface Props {
     db: TracksyDB;
     showToast: (msg: string, type?: 'success' | 'error') => void;
+    currency: string;
 }
 
-const fmt = (n: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
+// Moved fmt inside component to use currency prop
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export default function Reports({ db, showToast }: Props) {
+export default function Reports({ db, showToast, currency }: Props) {
+    const fmt = (n: number) =>
+        new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD', minimumFractionDigits: 0 }).format(n);
+
     const [txns, setTxns] = useState<Transaction[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [period, setPeriod] = useState<'month' | 'quarter' | 'year'>('month');

@@ -40,19 +40,26 @@ export interface Budget {
     startDate: Date;
 }
 
+export interface Setting {
+    key: string;
+    value: any;
+}
+
 export class TracksyDB extends Dexie {
     accounts!: Table<Account>;
     categories!: Table<Category>;
     transactions!: Table<Transaction>;
     budgets!: Table<Budget>;
+    settings!: Table<Setting>;
 
     constructor() {
         super('TracksyDB');
-        this.version(1).stores({
+        this.version(2).stores({
             accounts: '++id, name, type',
             categories: '++id, name, type',
             transactions: '++id, accountId, categoryId, type, date',
             budgets: '++id, categoryId, period',
+            settings: 'key',
         });
     }
 }
@@ -67,20 +74,41 @@ export function getDb(): TracksyDB {
 // Convenience alias — safe to call only from client components / useEffect
 export const db = typeof window !== 'undefined' ? new TracksyDB() : (null as unknown as TracksyDB);
 
-// Seed default data if empty
-export async function seedDefaultData() {
-    const accountCount = await db.accounts.count();
-    if (accountCount > 0) return;
+// Currency Helpers
+export const CURRENCIES = [
+    { code: 'USD', symbol: '$', name: 'US Dollar' },
+    { code: 'EUR', symbol: '€', name: 'Euro' },
+    { code: 'GBP', symbol: '£', name: 'British Pound' },
+    { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
+    { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
+    { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
+    { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling' },
+];
 
-    // Default accounts
-    await db.accounts.bulkAdd([
-        { name: 'Main Checking', type: 'checking', balance: 4280.50, currency: 'USD', color: '#6366f1', createdAt: new Date() },
-        { name: 'Savings', type: 'savings', balance: 12500.00, currency: 'USD', color: '#10b981', createdAt: new Date() },
-        { name: 'Credit Card', type: 'credit', balance: -1340.20, currency: 'USD', color: '#f59e0b', createdAt: new Date() },
-    ]);
+export async function getCurrency() {
+    const s = await db.settings.get('currency');
+    return s?.value || 'USD';
+}
 
-    // Default categories
-    const catIds = await db.categories.bulkAdd([
+export async function setCurrency(code: string) {
+    await db.settings.put({ key: 'currency', value: code });
+}
+
+export async function getUserName() {
+    const s = await db.settings.get('userName');
+    return s?.value || 'User';
+}
+
+export async function setUserName(name: string) {
+    await db.settings.put({ key: 'userName', value: name });
+}
+
+// Seed basic infrastructure (categories) if empty
+export async function seedInfrastructure() {
+    const catCount = await db.categories.count();
+    if (catCount > 0) return;
+
+    await db.categories.bulkAdd([
         { name: 'Salary', icon: '💼', color: '#10b981', type: 'income' },
         { name: 'Freelance', icon: '💻', color: '#6366f1', type: 'income' },
         { name: 'Investments', icon: '📈', color: '#8b5cf6', type: 'income' },
@@ -91,7 +119,23 @@ export async function seedDefaultData() {
         { name: 'Health', icon: '❤️', color: '#ef4444', type: 'expense', budget: 200 },
         { name: 'Entertainment', icon: '🎬', color: '#a855f7', type: 'expense', budget: 250 },
         { name: 'Utilities', icon: '⚡', color: '#f97316', type: 'expense', budget: 200 },
-    ], { allKeys: true });
+    ]);
+}
+
+// Seed default data if empty (Demo mode)
+export async function seedDefaultData() {
+    const accountCount = await db.accounts.count();
+    if (accountCount > 0) return;
+
+    // Infrastructure first
+    await seedInfrastructure();
+
+    // Default accounts
+    await db.accounts.bulkAdd([
+        { name: 'Main Checking', type: 'checking', balance: 4280.50, currency: 'USD', color: '#6366f1', createdAt: new Date() },
+        { name: 'Savings', type: 'savings', balance: 12500.00, currency: 'USD', color: '#10b981', createdAt: new Date() },
+        { name: 'Credit Card', type: 'credit', balance: -1340.20, currency: 'USD', color: '#f59e0b', createdAt: new Date() },
+    ]);
 
     const now = new Date();
     const month = now.getMonth();

@@ -1,23 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #0f0f14;
-  --bg-secondary: #16161f;
-  --bg-card: #1c1c28;
-  --bg-card-hover: #222232;
-  --bg-input: #13131c;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-hover: rgba(255, 255, 255, 0.14);
-  --text-primary: #f0f0ff;
-  --text-secondary: #8888aa;
-  --text-muted: #55556a;
-  --accent: #6366f1;
-  --accent-hover: #4f52e8;
-  --accent-glow: rgba(99, 102, 241, 0.2);
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #1e293b;
+  --bg-card-hover: #334155;
+  --bg-input: #0f172a;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.12);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-glow: rgba(59, 130, 246, 0.15);
   --green: #10b981;
   --red: #ef4444;
   --amber: #f59e0b;
-  --purple: #a855f7;
+  --purple: #8b5cf6;
   --pink: #ec4899;
   --cyan: #06b6d4;
 }
@@ -92,25 +92,22 @@ body {
 }
 
 .sidebar-logo-icon {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   background: var(--accent);
-  border-radius: 10px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  box-shadow: 0 0 20px var(--accent-glow);
+  color: white;
   flex-shrink: 0;
 }
 
 .sidebar-logo span {
   font-size: 18px;
   font-weight: 700;
-  letter-spacing: -0.3px;
-  background: linear-gradient(135deg, #f0f0ff, #9898cc);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
 }
 
 .sidebar-section-label {
@@ -142,9 +139,9 @@ body {
 }
 
 .nav-item.active {
-  background: rgba(99, 102, 241, 0.15);
-  color: #818cf8;
-  border-color: rgba(99, 102, 241, 0.2);
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--accent);
+  border-color: rgba(59, 130, 246, 0.2);
 }
 
 .nav-item .nav-icon {
@@ -554,12 +551,10 @@ body {
 .btn-primary {
   background: var(--accent);
   color: white;
-  box-shadow: 0 0 16px var(--accent-glow);
 }
 
 .btn-primary:hover {
   background: var(--accent-hover);
-  transform: translateY(-1px);
 }
 
 .btn-secondary {

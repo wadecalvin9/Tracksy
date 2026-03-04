@@ -1,29 +1,47 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import {
+    Wallet,
+    TrendingUp,
+    TrendingDown,
+    Landmark,
+    PiggyBank,
+    CreditCard,
+    Coins,
+    Pencil,
+    Trash2,
+    Plus
+} from 'lucide-react';
 import type { TracksyDB, Account } from '@/lib/db';
 
 interface Props {
     db: TracksyDB;
     showToast: (msg: string, type?: 'success' | 'error') => void;
     openAddSignal?: number;
+    currency: string;
 }
 
-const fmt = (n: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n);
+// Moved fmt inside component to use currency prop
 
 const ACCOUNT_TYPES = ['checking', 'savings', 'credit', 'cash'] as const;
-const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#06b6d4', '#a855f7', '#ef4444', '#14b8a6'];
-const ICONS: Record<string, string> = {
-    checking: '🏦', savings: '🐷', credit: '💳', cash: '💵',
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#06b6d4', '#8b5cf6', '#ef4444', '#14b8a6'];
+const ICONS: Record<string, React.ReactNode> = {
+    checking: <Landmark size={20} />,
+    savings: <PiggyBank size={20} />,
+    credit: <CreditCard size={20} />,
+    cash: <Coins size={20} />,
 };
 
-export default function Accounts({ db, showToast, openAddSignal }: Props) {
+const blank = { name: '', type: 'checking' as Account['type'], balance: '', currency: 'USD', color: COLORS[0] };
+
+export default function Accounts({ db, showToast, openAddSignal, currency }: Props) {
+    const fmt = (n: number) =>
+        new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD', minimumFractionDigits: 2 }).format(n);
+
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState<Account | null>(null);
-
-    const blank = { name: '', type: 'checking' as Account['type'], balance: '', currency: 'USD', color: COLORS[0] };
     const [form, setForm] = useState(blank);
 
     const load = useCallback(async () => {
@@ -36,12 +54,14 @@ export default function Accounts({ db, showToast, openAddSignal }: Props) {
         setEditing(null);
         setForm(blank);
         setShowModal(true);
-    }, [blank]);
+    }, []);
 
+    const lastSignal = useRef(openAddSignal);
     useEffect(() => {
-        if (openAddSignal && openAddSignal > 0) {
+        if (openAddSignal !== undefined && openAddSignal > (lastSignal.current ?? 0)) {
             openAdd();
         }
+        lastSignal.current = openAddSignal;
     }, [openAddSignal, openAdd]);
 
     const openEdit = (acc: Account) => {
@@ -75,9 +95,9 @@ export default function Accounts({ db, showToast, openAddSignal }: Props) {
         load();
     };
 
-    const totalBalance = accounts.reduce((s, a) => s + a.balance, 0);
-    const totalAssets = accounts.filter(a => a.balance > 0).reduce((s, a) => s + a.balance, 0);
-    const totalDebt = accounts.filter(a => a.balance < 0).reduce((s, a) => s + a.balance, 0);
+    const totalBalance = accounts.reduce((s: number, a: Account) => s + a.balance, 0);
+    const totalAssets = accounts.filter((a: Account) => a.balance > 0).reduce((s: number, a: Account) => s + a.balance, 0);
+    const totalDebt = accounts.filter((a: Account) => a.balance < 0).reduce((s: number, a: Account) => s + a.balance, 0);
 
     return (
         <>
@@ -87,27 +107,29 @@ export default function Accounts({ db, showToast, openAddSignal }: Props) {
                     <div className="topbar-subtitle">{accounts.length} account{accounts.length !== 1 ? 's' : ''}</div>
                 </div>
                 <div className="topbar-actions mobile-action-visible">
-                    <button className="btn btn-primary btn-sm" onClick={openAdd}>
-                        <span className="hide-mobile">+ Add Account</span>
-                        <span className="show-mobile">+ Account</span>
-                    </button>
+                    {accounts.length > 0 && (
+                        <button className="btn btn-primary btn-sm" onClick={openAdd}>
+                            <span className="hide-mobile">+ Add Account</span>
+                            <span className="show-mobile">+ Account</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
             <div className="page-content">
                 <div className="stat-grid" style={{ marginBottom: 24 }}>
                     <div className="stat-card accent">
-                        <div className="stat-icon accent">💼</div>
+                        <div className="stat-icon accent"><Wallet size={18} /></div>
                         <div className="stat-label">Net Worth</div>
                         <div className="stat-value accent">{fmt(totalBalance)}</div>
                     </div>
                     <div className="stat-card green">
-                        <div className="stat-icon green">📈</div>
+                        <div className="stat-icon green"><TrendingUp size={18} /></div>
                         <div className="stat-label">Total Assets</div>
                         <div className="stat-value green">{fmt(totalAssets)}</div>
                     </div>
                     <div className="stat-card red">
-                        <div className="stat-icon red">📉</div>
+                        <div className="stat-icon red"><TrendingDown size={18} /></div>
                         <div className="stat-label">Total Debt</div>
                         <div className="stat-value red">{fmt(totalDebt)}</div>
                     </div>
@@ -115,13 +137,13 @@ export default function Accounts({ db, showToast, openAddSignal }: Props) {
 
                 {accounts.length === 0 ? (
                     <div className="empty-state">
-                        <div className="empty-icon">🏦</div>
+                        <div className="empty-icon"><Landmark size={32} /></div>
                         <p>No accounts yet. Add one to start tracking your finances.</p>
-                        <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={openAdd}>+ Add Account</button>
+                        <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={openAdd}><Plus size={16} /> Add Account</button>
                     </div>
                 ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16 }}>
-                        {accounts.map(acc => (
+                        {accounts.map((acc: Account) => (
                             <div key={acc.id} className="account-card">
                                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -139,8 +161,8 @@ export default function Accounts({ db, showToast, openAddSignal }: Props) {
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: 6 }}>
-                                        <button className="btn btn-ghost btn-sm" onClick={() => openEdit(acc)} style={{ padding: '4px 8px' }}>✏️</button>
-                                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(acc)} style={{ padding: '4px 8px' }}>🗑️</button>
+                                        <button className="btn btn-ghost btn-sm" onClick={() => openEdit(acc)} style={{ padding: '4px 8px' }}><Pencil size={14} /></button>
+                                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(acc)} style={{ padding: '4px 8px' }}><Trash2 size={14} /></button>
                                     </div>
                                 </div>
                                 <div style={{ marginTop: 20 }}>
@@ -166,31 +188,31 @@ export default function Accounts({ db, showToast, openAddSignal }: Props) {
                         <div className="form-group">
                             <label className="form-label">Account Name</label>
                             <input className="form-input" placeholder="e.g. Main Checking" value={form.name}
-                                onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f: any) => ({ ...f, name: e.target.value }))} />
                         </div>
 
                         <div className="form-row">
                             <div className="form-group">
                                 <label className="form-label">Type</label>
                                 <select className="form-input form-select" value={form.type}
-                                    onChange={e => setForm(f => ({ ...f, type: e.target.value as Account['type'] }))}>
-                                    {ACCOUNT_TYPES.map(t => <option key={t} value={t}>{ICONS[t]} {t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
+                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm(f => ({ ...f, type: e.target.value as Account['type'] }))}>
+                                    {ACCOUNT_TYPES.map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
                                 </select>
                             </div>
                             <div className="form-group">
                                 <label className="form-label">Initial Balance</label>
                                 <input className="form-input" type="number" step="0.01" placeholder="0.00" value={form.balance}
-                                    onChange={e => setForm(f => ({ ...f, balance: e.target.value }))} />
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f: any) => ({ ...f, balance: e.target.value }))} />
                             </div>
                         </div>
 
                         <div className="form-group">
                             <label className="form-label">Color</label>
                             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                                {COLORS.map(c => (
+                                {COLORS.map((c: string) => (
                                     <div
                                         key={c}
-                                        onClick={() => setForm(f => ({ ...f, color: c }))}
+                                        onClick={() => setForm((f: any) => ({ ...f, color: c }))}
                                         style={{
                                             width: 28, height: 28, borderRadius: 8, background: c, cursor: 'pointer',
                                             border: form.color === c ? '2px solid white' : '2px solid transparent',

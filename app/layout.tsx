@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: "#6366f1",
+  themeColor: "#3b82f6",
 };
 
 function SWRegistration() {

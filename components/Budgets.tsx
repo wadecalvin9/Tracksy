@@ -1,6 +1,14 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import {
+    Target,
+    Plus,
+    Pencil,
+    Trash2,
+    ChevronRight,
+    AlertCircle
+} from 'lucide-react';
 import type { TracksyDB, Budget, Category, Transaction } from '@/lib/db';
 import RadialProgress from '@/components/RadialProgress';
 
@@ -8,19 +16,22 @@ interface Props {
     db: TracksyDB;
     showToast: (msg: string, type?: 'success' | 'error') => void;
     openAddSignal?: number;
+    currency: string;
 }
 
-const fmt = (n: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
+// Moved fmt inside component to use currency prop
 
-export default function Budgets({ db, showToast, openAddSignal }: Props) {
+const blank = { categoryId: '', amount: '', period: 'monthly' as Budget['period'] };
+
+export default function Budgets({ db, showToast, openAddSignal, currency }: Props) {
+    const fmt = (n: number) =>
+        new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD', minimumFractionDigits: 0 }).format(n);
+
     const [budgets, setBudgets] = useState<Budget[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [txns, setTxns] = useState<Transaction[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState<Budget | null>(null);
-
-    const blank = { categoryId: '', amount: '', period: 'monthly' as Budget['period'] };
     const [form, setForm] = useState(blank);
 
     const load = useCallback(async () => {
@@ -40,12 +51,14 @@ export default function Budgets({ db, showToast, openAddSignal }: Props) {
         const noBudget = categories.filter(c => c.type === 'expense' && !budgets.find(b => b.categoryId === c.id));
         setForm({ ...blank, categoryId: noBudget[0]?.id?.toString() ?? '' });
         setShowModal(true);
-    }, [blank, categories, budgets]);
+    }, [categories, budgets]);
 
+    const lastSignal = useRef(openAddSignal);
     useEffect(() => {
-        if (openAddSignal && openAddSignal > 0) {
+        if (openAddSignal !== undefined && openAddSignal > (lastSignal.current ?? 0)) {
             openAdd();
         }
+        lastSignal.current = openAddSignal;
     }, [openAddSignal, openAdd]);
 
     const catMap = Object.fromEntries(categories.map(c => [c.id!, c]));
@@ -99,8 +112,8 @@ export default function Budgets({ db, showToast, openAddSignal }: Props) {
     const totalSpent = budgets.reduce((s, b) => s + (monthSpend[b.categoryId] ?? 0), 0);
     const overBudget = budgets.filter(b => (monthSpend[b.categoryId] ?? 0) > b.amount).length;
     const spentPct = Math.min((totalSpent / (totalBudget || 1)) * 100, 100);
-
     const noBudgetCats = categories.filter(c => c.type === 'expense' && !budgets.find(b => b.categoryId === c.id));
+    const canAdd = noBudgetCats.length > 0;
 
     return (
         <>
@@ -110,10 +123,12 @@ export default function Budgets({ db, showToast, openAddSignal }: Props) {
                     <div className="topbar-subtitle">Tracking {budgets.length} categories</div>
                 </div>
                 <div className="topbar-actions mobile-action-visible">
-                    <button className="btn btn-primary btn-sm" onClick={openAdd} disabled={noBudgetCats.length === 0 && !editing}>
-                        <span className="hide-mobile">+ New Budget</span>
-                        <span className="show-mobile">+ Budget</span>
-                    </button>
+                    {budgets.length > 0 && (
+                        <button className="btn btn-primary btn-sm" onClick={openAdd} disabled={!canAdd && !editing}>
+                            <span className="hide-mobile">+ New Budget</span>
+                            <span className="show-mobile">+ Budget</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -166,9 +181,10 @@ export default function Budgets({ db, showToast, openAddSignal }: Props) {
                 {/* Budget cards grid */}
                 {budgets.length === 0 ? (
                     <div className="empty-state">
-                        <div className="empty-icon">🎯</div>
+                        <div className="empty-icon"><Target size={32} /></div>
                         <p>No budgets yet. Create one to start tracking your spending limits.</p>
-                        <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={openAdd}>+ Create Budget</button>
+                        <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={openAdd} disabled={!canAdd}><Plus size={16} /> Create Budget</button>
+                        {!canAdd && <p style={{ fontSize: 11, color: 'var(--red)', marginTop: 8 }}>All expense categories already have a budget.</p>}
                     </div>
                 ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
@@ -195,8 +211,8 @@ export default function Budgets({ db, showToast, openAddSignal }: Props) {
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                                             <span className="budget-pct" style={{ color: barColor }}>{Math.round(pct)}%</span>
                                             <div style={{ display: 'flex', gap: 4 }}>
-                                                <button className="btn btn-ghost btn-sm" onClick={() => openEdit(b)} style={{ padding: '4px 8px' }}>✏️</button>
-                                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(b)} style={{ padding: '4px 8px' }}>🗑️</button>
+                                                <button className="btn btn-ghost btn-sm" onClick={() => openEdit(b)} style={{ padding: '4px 8px' }}><Pencil size={14} /></button>
+                                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(b)} style={{ padding: '4px 8px' }}><Trash2 size={14} /></button>
                                             </div>
                                         </div>
                                     </div>

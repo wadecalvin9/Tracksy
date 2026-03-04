@@ -1,14 +1,22 @@
 'use client';
 
+import {
+    LayoutDashboard,
+    ArrowUpDown,
+    Target,
+    Landmark,
+    BarChart3,
+    Cog
+} from 'lucide-react';
 import type { Page } from '@/app/page';
 
 const TABS = [
-    { id: 'dashboard', icon: '⊞', label: 'Home' },
-    { id: 'transactions', icon: '↕', label: 'Txns' },
-    { id: 'budgets', icon: '◎', label: 'Budget' },
+    { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Home' },
+    { id: 'transactions', icon: <ArrowUpDown size={18} />, label: 'Txns' },
+    { id: 'reports', icon: <BarChart3 size={18} />, label: 'Reports' },
     // FAB is center
-    { id: 'accounts', icon: '🏦', label: 'Accounts' },
-    { id: 'reports', icon: '📊', label: 'Reports' },
+    { id: 'budgets', icon: <Target size={18} />, label: 'Budget' },
+    { id: 'settings', icon: <Cog size={18} />, label: 'Settings' },
 ] as const;
 
 interface Props {

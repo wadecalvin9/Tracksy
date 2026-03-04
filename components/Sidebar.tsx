@@ -1,13 +1,23 @@
 'use client';
 
+import {
+    LayoutDashboard,
+    ArrowUpDown,
+    Target,
+    Landmark,
+    BarChart3,
+    Wallet,
+    Cog
+} from 'lucide-react';
 import type { Page } from '@/app/page';
 
 const NAV = [
-    { id: 'dashboard', icon: '⊞', label: 'Dashboard' },
-    { id: 'transactions', icon: '↕', label: 'Transactions' },
-    { id: 'budgets', icon: '◎', label: 'Budgets' },
-    { id: 'accounts', icon: '🏦', label: 'Accounts' },
-    { id: 'reports', icon: '📊', label: 'Reports' },
+    { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
+    { id: 'transactions', icon: <ArrowUpDown size={18} />, label: 'Transactions' },
+    { id: 'budgets', icon: <Target size={18} />, label: 'Budgets' },
+    { id: 'accounts', icon: <Landmark size={18} />, label: 'Accounts' },
+    { id: 'reports', icon: <BarChart3 size={18} />, label: 'Reports' },
+    { id: 'settings', icon: <Cog size={18} />, label: 'Settings' },
 ] as const;
 
 export default function Sidebar({
@@ -20,7 +30,9 @@ export default function Sidebar({
     return (
         <aside className="sidebar">
             <div className="sidebar-logo">
-                <div className="sidebar-logo-icon">💸</div>
+                <div className="sidebar-logo-icon">
+                    <Wallet size={20} />
+                </div>
                 <span>Tracksy</span>
             </div>
 

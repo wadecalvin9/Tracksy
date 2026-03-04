@@ -1,23 +1,35 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import {
+    Search,
+    Plus,
+    Pencil,
+    Trash2,
+    ArrowUpCircle,
+    ArrowDownCircle,
+    Receipt
+} from 'lucide-react';
 import type { TracksyDB, Transaction, Account, Category } from '@/lib/db';
 
 interface Props {
     db: TracksyDB;
     showToast: (msg: string, type?: 'success' | 'error') => void;
     openAddSignal?: number;
+    currency: string;
 }
 
-const fmt = (n: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n);
+// Moved fmt inside component to use currency prop
 
 const fmtDate = (d: Date | string) =>
     new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 const toInputDate = (d: Date) => new Date(d).toISOString().slice(0, 10);
 
-export default function Transactions({ db, showToast, openAddSignal }: Props) {
+export default function Transactions({ db, showToast, openAddSignal, currency }: Props) {
+    const fmt = (n: number) =>
+        new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD', minimumFractionDigits: 2 }).format(n);
+
     const [txns, setTxns] = useState<Transaction[]>([]);
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
@@ -142,7 +154,7 @@ export default function Transactions({ db, showToast, openAddSignal }: Props) {
                     <div className="topbar-subtitle">{filtered.length} record{filtered.length !== 1 ? 's' : ''}</div>
                 </div>
                 <div className="topbar-actions">
-                    <button className="btn btn-primary" onClick={openAdd}>+ Add Transaction</button>
+                    <button className="btn btn-primary" onClick={openAdd}><Plus size={18} /> Add Transaction</button>
                 </div>
             </div>
 
@@ -171,7 +183,7 @@ export default function Transactions({ db, showToast, openAddSignal }: Props) {
                 <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
                     {filtered.length === 0 ? (
                         <div className="empty-state">
-                            <div className="empty-icon">🔍</div>
+                            <div className="empty-icon"><Search size={32} /></div>
                             <p>No transactions found. Try changing your filters or add a new transaction.</p>
                         </div>
                     ) : (
@@ -196,7 +208,7 @@ export default function Transactions({ db, showToast, openAddSignal }: Props) {
                                                 <td>
                                                     <div className="tx-row">
                                                         <div className="tx-icon" style={{ background: cat ? cat.color + '22' : '#ffffff11' }}>
-                                                            {cat?.icon ?? '💸'}
+                                                            {cat?.icon ? <span>{cat.icon}</span> : <Receipt size={18} />}
                                                         </div>
                                                         <div>
                                                             <div className="tx-name">{tx.description}</div>
@@ -214,8 +226,8 @@ export default function Transactions({ db, showToast, openAddSignal }: Props) {
                                                 <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>{fmtDate(tx.date)}</td>
                                                 <td>
                                                     <div style={{ display: 'flex', gap: 6 }}>
-                                                        <button className="btn btn-ghost btn-sm" onClick={() => openEdit(tx)}>Edit</button>
-                                                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(tx)}>Del</button>
+                                                        <button className="btn btn-ghost btn-sm" onClick={() => openEdit(tx)}><Pencil size={14} /></button>
+                                                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(tx)}><Trash2 size={14} /></button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -242,7 +254,7 @@ export default function Transactions({ db, showToast, openAddSignal }: Props) {
                                         className={`type-btn${form.type === t ? ` active-${t}` : ''}`}
                                         onClick={() => setForm(f => ({ ...f, type: t, categoryId: '' }))}
                                     >
-                                        {t === 'income' ? '↑ Income' : '↓ Expense'}
+                                        {t === 'income' ? <><ArrowUpCircle size={14} style={{ marginRight: 4 }} /> Income</> : <><ArrowDownCircle size={14} style={{ marginRight: 4 }} /> Expense</>}
                                     </button>
                                 ))}
                             </div>

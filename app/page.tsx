@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { db, seedDefaultData } from '@/lib/db';
+import { useEffect, useState, useMemo, useCallback } from 'react';
+import { db, seedInfrastructure, getCurrency, getUserName } from '@/lib/db';
 import Sidebar from '@/components/Sidebar';
 import BottomNav from '@/components/BottomNav';
 import Dashboard from '@/components/Dashboard';
@@ -9,30 +9,40 @@ import Transactions from '@/components/Transactions';
 import Budgets from '@/components/Budgets';
 import Accounts from '@/components/Accounts';
 import Reports from '@/components/Reports';
+import Settings from '@/components/Settings';
 import Toast from '@/components/Toast';
 
-export type Page = 'dashboard' | 'transactions' | 'budgets' | 'accounts' | 'reports';
+export type Page = 'dashboard' | 'transactions' | 'budgets' | 'accounts' | 'reports' | 'settings';
 
 export interface ToastMsg { id: number; message: string; type: 'success' | 'error'; }
 
 export default function Home() {
   const [page, setPage] = useState<Page>('dashboard');
   const [ready, setReady] = useState(false);
+  const [currency, setCurrencyState] = useState('USD');
+  const [userName, setUserNameState] = useState('User');
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   // Signals to components to open their add modals
   const [openAddTx, setOpenAddTx] = useState(0);
   const [openAddBudget, setOpenAddBudget] = useState(0);
   const [openAddAccount, setOpenAddAccount] = useState(0);
 
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     const id = Date.now();
     setToasts(t => [...t, { id, message, type }]);
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3000);
-  };
+  }, []);
 
   useEffect(() => {
-    seedDefaultData().then(() => setReady(true));
+    seedInfrastructure().then(() => {
+      Promise.all([
+        getCurrency().then(setCurrencyState),
+        getUserName().then(setUserNameState)
+      ]).then(() => setReady(true));
+    });
   }, []);
+
+  const pageProps = useMemo(() => ({ db, showToast, currency, userName }), [showToast, currency, userName]);
 
   if (!ready) {
     return (
@@ -56,8 +66,6 @@ export default function Home() {
     }
   };
 
-  const pageProps = { db, showToast };
-
   return (
     <div className="app-shell">
       <Sidebar activePage={page} onNavigate={setPage} />
@@ -68,6 +76,7 @@ export default function Home() {
         {page === 'budgets' && <Budgets      {...pageProps} openAddSignal={openAddBudget} />}
         {page === 'accounts' && <Accounts     {...pageProps} openAddSignal={openAddAccount} />}
         {page === 'reports' && <Reports      {...pageProps} />}
+        {page === 'settings' && <Settings     {...pageProps} />}
       </div>
 
       {/* Mobile-only bottom navigation */}
