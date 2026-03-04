@@ -1,37 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tracksy — Modern Personal Finance Tracker
+
+Tracksy is a professional, local-first personal finance application designed to provide a premium and secure experience for managing your money.
+
+![Tracksy Dashboard](public/screenshots/Dashboard.png)
+
+## Key Features
+
+- **💎 Professional Dashboard**: A high-end financial overview featuring a dynamic Net Worth banner, interactive budget tracking, and real-time spending insights.
+- **🏦 Account Management**: Securely track multiple financial accounts including Cash, Savings, and Credit Cards with real-time balance updates.
+- **💸 Transaction Tracking**: Effortlessly log income and expenses with categorized records, searchable history, and quick-action filters.
+- **🎯 Smart Budgeting**: Set spending limits for different categories and monitor your progress with visual indicators to stay on track.
+- **📊 Detailed Reports**: Gain insights into your financial habits with historical spending charts and category breakdowns.
+- **⚙️ Advanced Personalization**:
+    - **Global Currency Support**: Choose your preferred currency (KSH, USD, EUR, GBP, etc.) to be used throughout the app.
+    - **Profile Customization**: Personalize your experience with a custom display name.
+- **📱 True Responsive Design**: A seamless experience across all devices, from desktop browsers to mobile phones with a dedicated bottom navigation bar.
+- **🔒 Local & Private**: Your financial data never leaves your device. Everything is stored locally using IndexedDB (Dexie.js).
+
+## Tech Stack
+
+- **Framework**: [Next.js](https://nextjs.org) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org)
+- **Database**: [Dexie.js](https://dexie.org) (IndexedDB wrapper)
+- **Icons**: [Lucide React](https://lucide.dev)
+- **Styling**: Vanilla CSS with a custom-built, professional design system
 
 ## Getting Started
 
 First, run the development server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `app/`: Next.js application structure.
+- `components/`: Modular React components for the dashboard, settings, and navigation.
+- `lib/db.ts`: Database schema and helper functions.
+- `app/globals.css`: Core design system and global styles.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-"# Tracksy" 
+---
+Built with ❤️ for better financial clarity.

@@ -112,26 +112,37 @@ export default function Dashboard({ db, showToast, onNavigate, currency, userNam
             <div className="page-content">
                 {/* Net Worth Banner */}
                 <div className="net-worth-banner">
-                    <div>
-                        <div className="net-worth-label">Total Net Worth</div>
-                        <div className="net-worth-value" style={{ color: netWorth >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                        <div className="net-worth-label" style={{ fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '11px' }}>Total Net Worth</div>
+                        <div className="net-worth-value" style={{ color: 'var(--text-primary)', marginTop: '4px' }}>
                             {fmt(netWorth)}
                         </div>
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-                            Across {accounts.length} account{accounts.length !== 1 ? 's' : ''}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-muted)', marginTop: '8px' }}>
+                            <div className="account-dot" style={{ width: '8px', height: '8px', background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)' }} />
+                            <span>Across {accounts.length} connected accounts</span>
                         </div>
                     </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap' }} className="net-worth-stats-container">
+
+                    <div className="net-worth-stats-grid">
                         <div className="net-worth-mini">
-                            <div className="net-worth-mini-label"><TrendingUp size={12} style={{ display: 'inline', marginRight: 4 }} /> Income this month</div>
+                            <div className="net-worth-mini-label">
+                                <TrendingUp size={14} style={{ color: 'var(--green)' }} />
+                                <span>Income</span>
+                            </div>
                             <div className="net-worth-mini-value" style={{ color: 'var(--green)' }}>{fmt(monthIncome)}</div>
                         </div>
                         <div className="net-worth-mini">
-                            <div className="net-worth-mini-label"><TrendingDown size={12} style={{ display: 'inline', marginRight: 4 }} /> Expenses this month</div>
+                            <div className="net-worth-mini-label">
+                                <TrendingDown size={14} style={{ color: 'var(--red)' }} />
+                                <span>Expenses</span>
+                            </div>
                             <div className="net-worth-mini-value" style={{ color: 'var(--red)' }}>{fmt(monthExpense)}</div>
                         </div>
                         <div className="net-worth-mini">
-                            <div className="net-worth-mini-label"><Wallet size={12} style={{ display: 'inline', marginRight: 4 }} /> Savings</div>
+                            <div className="net-worth-mini-label">
+                                <TrendingDown size={14} style={{ color: 'var(--accent)', transform: 'rotate(-90deg)' }} />
+                                <span>Savings</span>
+                            </div>
                             <div className="net-worth-mini-value" style={{ color: savings >= 0 ? 'var(--green)' : 'var(--red)' }}>{fmt(savings)}</div>
                         </div>
                     </div>
