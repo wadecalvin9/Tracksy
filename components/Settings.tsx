@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Cog, Globe, Shield, Bell, User, HardDrive, RefreshCw, AlertTriangle, Cloud, CloudOff, LogIn, LogOut } from 'lucide-react';
+import { Cog, Globe, Shield, Bell, User, HardDrive, RefreshCw, AlertTriangle, Cloud, CloudOff, LogIn, LogOut, Info, Instagram, Heart } from 'lucide-react';
 import { getCurrency, setCurrency, getUserName, setUserName, getStorageInfo, requestPersistence, CURRENCIES } from '@/lib/db';
 import type { User as FirebaseUser } from 'firebase/auth';
 import type { SyncState } from '@/app/page';
@@ -235,6 +235,63 @@ export default function Settings({ showToast, user, syncState, lastSync, onSignI
                             </div>
                         </div>
                         <div className="setting-placeholder">Coming soon</div>
+                    </section>
+
+                    <section className="settings-section">
+                        <div className="section-header">
+                            <Info size={20} className="section-icon" />
+                            <div>
+                                <h3 className="section-title">About Tracksy</h3>
+                                <p className="section-desc">App version and developer info</p>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                            <div style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid var(--border)' }}>
+                                <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600, marginBottom: 4 }}>Tracksy v1.0.0</div>
+                                <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                                    A robust, offline-first personal finance tracker designed for speed, privacy, and seamless cloud synchronization.
+                                </p>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <div style={{
+                                    width: 40, height: 40, borderRadius: '50%',
+                                    background: 'var(--accent)', display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center',
+                                    color: 'white'
+                                }}>
+                                    <User size={20} />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontSize: 14, fontWeight: 600 }}>Wade Calvin</div>
+                                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Lead Developer</div>
+                                </div>
+                                <a
+                                    href="https://www.instagram.com/ph4nt0m_._?igsh=MW40Z21pYWJ2cWQxMg=="
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-secondary btn-sm"
+                                    style={{ gap: 6 }}
+                                >
+                                    <Instagram size={14} />
+                                    <span>Follow</span>
+                                </a>
+                            </div>
+
+                            <div style={{
+                                textAlign: 'center',
+                                marginTop: 8,
+                                fontSize: 11,
+                                color: 'var(--text-muted)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 4
+                            }}>
+                                Made in 2026
+                            </div>
+                        </div>
                     </section>
                 </div>
             </div>

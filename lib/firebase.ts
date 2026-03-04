@@ -20,8 +20,12 @@ const firebaseConfig = {
 
 
 // Prevent re-initialization during hot reloads
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const isConfigValid = !!firebaseConfig.apiKey;
+const app = (getApps().length === 0 && isConfigValid)
+    ? initializeApp(firebaseConfig)
+    : getApps()[0];
 
-export const auth = getAuth(app);
-export const firestore = getFirestore(app);
+// Only initialize services if app exists
+export const auth = app ? getAuth(app) : null as any;
+export const firestore = app ? getFirestore(app) : null as any;
 export const googleProvider = new GoogleAuthProvider();
