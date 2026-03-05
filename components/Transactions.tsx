@@ -61,8 +61,8 @@ export default function Transactions({ db, showToast, openAddSignal, currency }:
 
     useEffect(() => { load(); }, [load]);
 
-    const catMap = Object.fromEntries(categories.map(c => [c.id!, c]));
-    const accMap = Object.fromEntries(accounts.map(a => [a.id!, a]));
+    const catMap = Object.fromEntries(categories.map(c => [String(c.id), c]));
+    const accMap = Object.fromEntries(accounts.map(a => [String(a.id), a]));
 
     const filtered = txns.filter(t => {
         if (filter !== 'all' && t.type !== filter) return false;
@@ -72,7 +72,7 @@ export default function Transactions({ db, showToast, openAddSignal, currency }:
 
     const openAdd = () => {
         setEditing(null);
-        setForm({ ...blank, accountId: accounts[0]?.id?.toString() ?? '', categoryId: categories[0]?.id?.toString() ?? '' });
+        setForm({ ...blank, accountId: String(accounts[0]?.id ?? ''), categoryId: String(categories[0]?.id ?? '') });
         setShowModal(true);
     };
 
@@ -82,8 +82,8 @@ export default function Transactions({ db, showToast, openAddSignal, currency }:
             type: tx.type as 'income' | 'expense',
             amount: tx.amount.toString(),
             description: tx.description,
-            accountId: tx.accountId.toString(),
-            categoryId: tx.categoryId.toString(),
+            accountId: String(tx.accountId),
+            categoryId: String(tx.categoryId),
             date: toInputDate(tx.date),
         });
         setShowModal(true);
@@ -108,16 +108,20 @@ export default function Transactions({ db, showToast, openAddSignal, currency }:
             updatedAt: new Date(),
         };
 
-        // Update account balance
-        const acc = accMap[payload.accountId];
-        if (acc) {
+        // Atomic account balance update: read LATEST from DB
+        const accId = payload.accountId;
+        const latestAcc = (await db.accounts.get(accId)) || (!isNaN(Number(accId)) ? await db.accounts.get(Number(accId)) : null);
+
+        if (latestAcc) {
             let delta = payload.type === 'income' ? payload.amount : -payload.amount;
-            if (editing) {
-                // Reverse old
-                const oldDelta = editing.type === 'income' ? -editing.amount : editing.amount;
-                await db.accounts.update(payload.accountId, { balance: acc.balance + oldDelta + delta });
-            } else {
-                await db.accounts.update(payload.accountId, { balance: acc.balance + delta, updatedAt: new Date() });
+            const finalBalance = editing
+                ? latestAcc.balance + (editing.type === 'income' ? -editing.amount : editing.amount) + delta
+                : latestAcc.balance + delta;
+
+            const updatePayload = { balance: finalBalance, updatedAt: new Date() };
+            const updated = await db.accounts.update(accId, updatePayload);
+            if (updated === 0 && !isNaN(Number(accId))) {
+                await db.accounts.update(Number(accId), updatePayload);
             }
         }
 
@@ -129,11 +133,17 @@ export default function Transactions({ db, showToast, openAddSignal, currency }:
     };
 
     const handleDelete = async (tx: Transaction) => {
-        // Reverse balance
-        const acc = accMap[tx.accountId];
-        if (acc) {
+        const accId = tx.accountId;
+        const latestAcc = (await db.accounts.get(accId)) || (!isNaN(Number(accId)) ? await db.accounts.get(Number(accId)) : null);
+
+        if (latestAcc) {
             const delta = tx.type === 'income' ? -tx.amount : tx.amount;
-            await db.accounts.update(tx.accountId, { balance: acc.balance + delta });
+            const finalBalance = latestAcc.balance + delta;
+            const updatePayload = { balance: finalBalance, updatedAt: new Date() };
+            const updated = await db.accounts.update(accId, updatePayload);
+            if (updated === 0 && !isNaN(Number(accId))) {
+                await db.accounts.update(Number(accId), updatePayload);
+            }
         }
         await db.transactions.update(tx.id!, { deletedAt: new Date(), updatedAt: new Date() });
         showToast('Transaction deleted');

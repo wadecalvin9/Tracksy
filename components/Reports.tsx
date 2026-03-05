@@ -31,7 +31,7 @@ export default function Reports({ db, showToast, currency }: Props) {
 
     useEffect(() => { load(); }, [load]);
 
-    const catMap = Object.fromEntries(categories.map(c => [c.id!, c]));
+    const catMap = Object.fromEntries(categories.map(c => [String(c.id), c]));
     const now = new Date();
 
     // Filter by period
@@ -53,11 +53,12 @@ export default function Reports({ db, showToast, currency }: Props) {
     // Spending by category
     const byCat: Record<string, number> = {};
     filtered.filter(t => t.type === 'expense').forEach(t => {
-        byCat[t.categoryId] = (byCat[t.categoryId] ?? 0) + t.amount;
+        const cid = String(t.categoryId);
+        byCat[cid] = (byCat[cid] ?? 0) + t.amount;
     });
 
     const catRanked = Object.entries(byCat)
-        .map(([id, amt]) => ({ cat: catMap[id], amt }))
+        .map(([id, amt]) => ({ cat: catMap[String(id)], amt }))
         .filter(x => x.cat)
         .sort((a, b) => b.amt - a.amt);
 
@@ -82,10 +83,11 @@ export default function Reports({ db, showToast, currency }: Props) {
     // Top income sources
     const byIncomeCat: Record<string, number> = {};
     filtered.filter(t => t.type === 'income').forEach(t => {
-        byIncomeCat[t.categoryId] = (byIncomeCat[t.categoryId] ?? 0) + t.amount;
+        const cid = String(t.categoryId);
+        byIncomeCat[cid] = (byIncomeCat[cid] ?? 0) + t.amount;
     });
     const incomeRanked = Object.entries(byIncomeCat)
-        .map(([id, amt]) => ({ cat: catMap[id], amt }))
+        .map(([id, amt]) => ({ cat: catMap[String(id)], amt }))
         .filter(x => x.cat)
         .sort((a, b) => b.amt - a.amt);
 

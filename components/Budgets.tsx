@@ -49,8 +49,8 @@ export default function Budgets({ db, showToast, openAddSignal, currency }: Prop
     const openAdd = useCallback(() => {
         setEditing(null);
         // Pre-select first category that doesn't have a budget
-        const noBudget = categories.filter(c => c.type === 'expense' && !budgets.find(b => b.categoryId === c.id));
-        setForm({ ...blank, categoryId: noBudget[0]?.id?.toString() ?? '' });
+        const noBudget = categories.filter(c => c.type === 'expense' && !budgets.find(b => String(b.categoryId) === String(c.id)));
+        setForm({ ...blank, categoryId: String(noBudget[0]?.id ?? '') });
         setShowModal(true);
     }, [categories, budgets]);
 
@@ -62,7 +62,7 @@ export default function Budgets({ db, showToast, openAddSignal, currency }: Prop
         lastSignal.current = openAddSignal;
     }, [openAddSignal, openAdd]);
 
-    const catMap = Object.fromEntries(categories.map(c => [c.id!, c]));
+    const catMap = Object.fromEntries(categories.map(c => [String(c.id), c]));
 
     // Compute this month's spending per category
     const now = new Date();
@@ -70,13 +70,14 @@ export default function Budgets({ db, showToast, openAddSignal, currency }: Prop
     txns.forEach(tx => {
         const d = new Date(tx.date);
         if (tx.type === 'expense' && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
-            monthSpend[tx.categoryId] = (monthSpend[tx.categoryId] ?? 0) + tx.amount;
+            const cid = String(tx.categoryId);
+            monthSpend[cid] = (monthSpend[cid] ?? 0) + tx.amount;
         }
     });
 
     const openEdit = (b: Budget) => {
         setEditing(b);
-        setForm({ categoryId: b.categoryId.toString(), amount: b.amount.toString(), period: b.period });
+        setForm({ categoryId: String(b.categoryId), amount: b.amount.toString(), period: b.period });
         setShowModal(true);
     };
 
@@ -107,10 +108,10 @@ export default function Budgets({ db, showToast, openAddSignal, currency }: Prop
     };
 
     const totalBudget = budgets.reduce((s, b) => s + b.amount, 0);
-    const totalSpent = budgets.reduce((s, b) => s + (monthSpend[b.categoryId] ?? 0), 0);
-    const overBudget = budgets.filter(b => (monthSpend[b.categoryId] ?? 0) > b.amount).length;
+    const totalSpent = budgets.reduce((s, b) => s + (monthSpend[String(b.categoryId)] ?? 0), 0);
+    const overBudget = budgets.filter(b => (monthSpend[String(b.categoryId)] ?? 0) > b.amount).length;
     const spentPct = Math.min((totalSpent / (totalBudget || 1)) * 100, 100);
-    const noBudgetCats = categories.filter(c => c.type === 'expense' && !budgets.find(b => b.categoryId === c.id));
+    const noBudgetCats = categories.filter(c => c.type === 'expense' && !budgets.find(b => String(b.categoryId) === String(c.id)));
     const canAdd = noBudgetCats.length > 0;
 
     return (
@@ -187,8 +188,8 @@ export default function Budgets({ db, showToast, openAddSignal, currency }: Prop
                 ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
                         {budgets.map(b => {
-                            const cat = catMap[b.categoryId];
-                            const spent = monthSpend[b.categoryId] ?? 0;
+                            const cat = catMap[String(b.categoryId)];
+                            const spent = monthSpend[String(b.categoryId)] ?? 0;
                             const pct = Math.min((spent / b.amount) * 100, 100);
                             const over = spent > b.amount;
                             const warn = pct > 80;

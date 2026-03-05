@@ -52,7 +52,7 @@ export default function Dashboard({ db, showToast, onNavigate, currency, userNam
 
     useEffect(() => { load(); }, [load]);
 
-    const netWorth = accounts.reduce((s: number, a: Account) => s + a.balance, 0);
+    const netWorth = accounts.reduce((s: number, a: Account) => s + Number(a.balance || 0), 0);
     const now = new Date();
     const thisMonth = txns.filter((t: Transaction) => {
         const d = new Date(t.date);
@@ -166,11 +166,11 @@ export default function Dashboard({ db, showToast, onNavigate, currency, userNam
                     ) : (
                         <div className="two-col" style={{ gap: 12 }}>
                             {budgets.slice(0, 2).map((b: Budget) => {
-                                const cat = catMap[b.categoryId];
+                                const cat = catMap[String(b.categoryId)];
                                 const spent = txns.filter((t: Transaction) => {
                                     const d = new Date(t.date);
                                     return t.type === 'expense' &&
-                                        t.categoryId === b.categoryId &&
+                                        String(t.categoryId) === String(b.categoryId) &&
                                         d.getMonth() === now.getMonth() &&
                                         d.getFullYear() === now.getFullYear();
                                 }).reduce((s: number, t: Transaction) => s + t.amount, 0);
@@ -259,7 +259,7 @@ export default function Dashboard({ db, showToast, onNavigate, currency, userNam
                                 </thead>
                                 <tbody>
                                     {recent.map((tx: Transaction) => {
-                                        const cat = catMap[tx.categoryId];
+                                        const cat = catMap[String(tx.categoryId)];
                                         return (
                                             <tr key={tx.id}>
                                                 <td>
